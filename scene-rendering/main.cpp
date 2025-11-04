@@ -1,3 +1,18 @@
+/**
+ * @file main.cpp
+ * @brief 3D Scene Ray Tracing with Intel Embree
+ * 
+ * This program renders a 3D scene using Intel Embree's high-performance ray tracing
+ * library. It supports:
+ * - Multiple geometry types (triangles, cubes)
+ * - Point and directional light sources
+ * - Phong shading with diffuse and specular components
+ * - Recursive ray tracing for reflections
+ * - Shadow calculation
+ * 
+ * Output: PPM image file (output.ppm)
+ */
+
 #include <embree4/rtcore.h>
 #include <vector>
 #include <iostream>
@@ -5,7 +20,10 @@
 #include <cmath>
 #include <algorithm>
 
-// Класс Vector3D для работы с 3D-векторами
+/**
+ * @brief 3D Vector class for geometric operations
+ * Provides basic vector arithmetic and operations for 3D graphics
+ */
 class Vector3D {
 public:
     double x, y, z;
@@ -31,7 +49,10 @@ public:
     }
 };
 
-// Класс Color для представления RGB-цвета
+/**
+ * @brief RGB Color class for color representation
+ * Supports color arithmetic operations for lighting calculations
+ */
 class Color {
 public:
     double r, g, b;
@@ -44,17 +65,23 @@ public:
     Color operator*(const Color &other) const { return Color(r * other.r, g * other.g, b * other.b); }
 };
 
-// Структура Material для описания материала объекта
+/**
+ * @brief Material structure for surface properties
+ * Defines how a surface interacts with light (Phong reflection model)
+ */
 struct Material {
-    Color color;
-    double diffuse;
-    double specular;
-    double exponent;
-    Color specular_color;
-    double reflectivity; // Коэффициент отражения (0.0 - не отражает, 1.0 - идеальное зеркало)
+    Color color;             ///< Base diffuse color
+    double diffuse;          ///< Diffuse reflection coefficient
+    double specular;         ///< Specular reflection coefficient
+    double exponent;         ///< Specular exponent (shininess)
+    Color specular_color;    ///< Specular highlight color
+    double reflectivity;     ///< Reflection coefficient (0.0 = no reflection, 1.0 = perfect mirror)
 };
 
-// Абстрактный базовый класс для источников света
+/**
+ * @brief Abstract base class for light sources
+ * Defines the interface for different types of light sources
+ */
 class Light {
 public:
     Color intensity;
@@ -69,7 +96,10 @@ public:
     }
 };
 
-// Класс точечного источника света
+/**
+ * @brief Point light source class
+ * Emits light uniformly in all directions from a single point
+ */
 class PointLight : public Light {
 public:
     Vector3D position;
@@ -104,7 +134,10 @@ public:
     }
 };
 
-// Класс направленного источника света
+/**
+ * @brief Directional light source class
+ * Emits parallel light rays in a specific direction (like sunlight)
+ */
 class DirectionalLight : public Light {
 public:
     Vector3D direction;
@@ -139,7 +172,24 @@ public:
     }
 };
 
-// Функция для вычисления направления луча через пиксель
+/**
+ * @brief Compute the ray direction through a pixel
+ * 
+ * Calculates the direction of a ray from the camera eye through a specific
+ * pixel (i, j) on the virtual screen.
+ * 
+ * @param i Pixel column index
+ * @param j Pixel row index
+ * @param width Image width in pixels
+ * @param height Image height in pixels
+ * @param eye Camera position
+ * @param center Point the camera is looking at
+ * @param up Up direction vector
+ * @param distance Distance from camera to the screen
+ * @param screen_width Width of the virtual screen
+ * @param screen_height Height of the virtual screen
+ * @return Normalized ray direction vector
+ */
 Vector3D computeRayDirection(int i, int j, int width, int height, const Vector3D &eye, const Vector3D center,
                              const Vector3D &up, double distance, double screen_width, double screen_height) {
     Vector3D view = (center - eye).normalized();
@@ -157,11 +207,24 @@ Vector3D computeRayDirection(int i, int j, int width, int height, const Vector3D
     return rayDir;
 }
 
-// Функция шейдинга: вычисляет цвет в точке пересечения луча с учетом отражений
+/**
+ * @brief Shading function with recursive ray tracing
+ * 
+ * Computes the color at a ray-surface intersection point using the Phong
+ * reflection model and supports recursive ray tracing for reflections.
+ * 
+ * @param rayhit Ray-surface intersection information
+ * @param scene Embree scene containing all geometry
+ * @param lights Vector of light sources
+ * @param viewDir View direction (ray direction)
+ * @param depth Current recursion depth for reflections
+ * @return Final color at the intersection point
+ */
 Color shade(const RTCRayHit &rayhit, RTCScene scene, const std::vector<Light *> &lights, const Vector3D &viewDir,
             int depth = 0) {
-    const int MAX_DEPTH = 50;
+    const int MAX_DEPTH = 50; // Maximum recursion depth for reflections
 
+    // Stop recursion at maximum depth to prevent infinite loops
     if (depth >= MAX_DEPTH) {
         return Color(0, 0, 0);
     }
@@ -217,9 +280,12 @@ Color shade(const RTCRayHit &rayhit, RTCScene scene, const std::vector<Light *> 
     return totalColor;
 }
 
-// Обработчик ошибок Embree
+/**
+ * @brief Embree error handler
+ * Called when Embree encounters an error during ray tracing operations
+ */
 void errorFunction(void *userPtr, RTCError error, const char *str) {
-    std::cerr << "Ошибка Embree " << error << ": " << str << std::endl;
+    std::cerr << "Embree Error " << error << ": " << str << std::endl;
 }
 
 int main() {
