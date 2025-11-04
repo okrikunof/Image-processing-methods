@@ -1,6 +1,7 @@
 #include "illumination.h"
 #include "vector3d.h"
 #include <array>
+#include <cmath>
 
 /**
  * Calculate illumination at a point on a triangular surface.
