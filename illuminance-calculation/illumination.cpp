@@ -2,6 +2,11 @@
 #include "vector3d.h"
 #include <array>
 
+/**
+ * Calculate illumination at a point on a triangular surface.
+ * Uses the inverse square law for distance attenuation and
+ * considers both the angle of incidence and light directionality.
+ */
 std::array<double, 3> calculateIllumination(
     const std::array<double, 3>& I0,
     const Vector3D& O,
@@ -12,30 +17,33 @@ std::array<double, 3> calculateIllumination(
     const double x,
     const double y
 ) {
-    // Converting local coordinates to global coordinates
+    // Convert local coordinates (x, y) to global coordinates on the triangle
     const Vector3D edge1 = (P1 - P0).normalized();
     const Vector3D edge2 = (P2 - P0).normalized();
     const Vector3D PT = P0 + edge1 * x + edge2 * y;
 
-    // Calculation of the normal to the plane
+    // Calculate the normal vector to the triangle plane
     const Vector3D N = (P2 - P0).cross(P1 - P0).normalized();
 
-    // Vector from the point to the light source
+    // Vector from the point on the surface to the light source
     const Vector3D s = PT - PL;
-    const double R2 = s.norm() * s.norm();
+    const double R2 = s.norm() * s.norm(); // Distance squared (for inverse square law)
 
-    // Angle calculation
+    // Calculate angle of incidence (angle between surface normal and light direction)
+    // Using absolute value to handle both sides of the surface
     const double cos_alpha = std::abs(s.dot(N) / s.norm());
+    
+    // Calculate directionality factor (how aligned the light is with its axis)
     const double cos_theta = s.dot(O) / s.norm();
 
-    // Light intensity
+    // Calculate effective light intensity considering directionality
     const std::array I = {
         I0[0] * cos_theta,
         I0[1] * cos_theta,
         I0[2] * cos_theta
     };
 
-    // Point illumination
+    // Calculate final illumination using inverse square law and cosine law
     const std::array E = {
         (I[0] * cos_alpha) / R2,
         (I[1] * cos_alpha) / R2,
