@@ -149,6 +149,8 @@ cd scene-rendering && mkdir -p build && cd build && cmake .. && make && cd ../..
 
 Calculates the brightness (luminance) of a point on a triangular surface illuminated by multiple light sources using the Phong reflection model.
 
+📖 **[Full Documentation](brightness-calculation/README.md)**
+
 **Features:**
 - Multiple light sources support
 - Diffuse and specular reflection
@@ -176,6 +178,8 @@ Point brightness: (R, G, B)
 
 Computes the illumination (illuminance) at a point on a triangular surface from a single directional light source.
 
+📖 **[Full Documentation](illuminance-calculation/README.md)**
+
 **Features:**
 - Single directional light source
 - RGB illumination calculation
@@ -198,6 +202,8 @@ Point illumination: (R, G, B)
 ### Scene Rendering
 
 Advanced ray tracing implementation using Intel Embree for rendering 3D scenes with realistic lighting, shadows, and reflections.
+
+📖 **[Full Documentation](scene-rendering/README.md)**
 
 **Features:**
 - Hardware-accelerated ray tracing (Intel Embree)
